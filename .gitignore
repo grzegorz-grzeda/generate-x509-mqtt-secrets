@@ -1,0 +1,7 @@
+*.crt
+*.csr
+*.key
+*.srl
+.env
+.vscode
+*.conf
