@@ -7,8 +7,20 @@ from os import uname, makedirs, path, chmod, environ
 from subprocess import call, DEVNULL
 from logging import Logger, Formatter, StreamHandler, DEBUG, INFO, WARNING, ERROR, getLogger
 
+LOCAL_HOSTNAME = uname()[1]
+
+DEFAULT_VALUES = {
+    'X509_SUBJECT_ORGANISATION_CA': f"{LOCAL_HOSTNAME}-CA",
+    'X509_SUBJECT_ORGANISATION_BROKER': f"{LOCAL_HOSTNAME}-BROKER",
+    'X509_SUBJECT_ORGANISATION_ENDPOINT': f"{LOCAL_HOSTNAME}-ENDPOINT",
+    'X509_SUBJECT_COUNTRY': "US",
+    'X509_SUBJECT_STATE': "",
+    'X509_SUBJECT_LOCATION': ""
+}
+
+
 OUTPUT_DIRECTORY = 'secrets'
-DEFAULT_HOSTNAME = f'{uname()[1]}.local'
+DEFAULT_HOSTNAME = f'{LOCAL_HOSTNAME}.local'
 DEFAULT_DAYS = 18250
 DEFAULT_KEY_LENGTH_BITS = 2048
 DESTINATION_MOSQUITTO_SECRETS_DIR = 'mosquitto/certs'
@@ -63,6 +75,13 @@ def E(text):
     LOGGER.error(text)
 
 
+def get_environment_value(name: str) -> str:
+    if not name in environ:
+        return DEFAULT_VALUES[name]
+    else:
+        return environ[name]
+
+
 def get_full_path_of(relative_path: str) -> str:
     file_path = path.realpath(__file__)
     directory_path = path.dirname(file_path)
@@ -74,22 +93,22 @@ def get_full_path_of_output_directory() -> str:
 
 
 def get_subject_organisation_for_ca() -> str:
-    return environ['X509_SUBJECT_ORGANISATION_CA']
+    return get_environment_value('X509_SUBJECT_ORGANISATION_CA')
 
 
 def get_subject_organisation_for_broker() -> str:
-    return environ['X509_SUBJECT_ORGANISATION_BROKER']
+    return get_environment_value('X509_SUBJECT_ORGANISATION_BROKER')
 
 
 def get_subject_organisation_for_endpoint() -> str:
-    return environ['X509_SUBJECT_ORGANISATION_ENDPOINT']
+    return get_environment_value('X509_SUBJECT_ORGANISATION_ENDPOINT')
 
 
 def get_subject_for(organisation: str, host: str) -> str:
     subject = [
-        f"/C={environ['X509_SUBJECT_COUNTRY']}",
-        f"/ST={environ['X509_SUBJECT_STATE']}",
-        f"/L={environ['X509_SUBJECT_LOCATION']}",
+        f"/C={get_environment_value('X509_SUBJECT_COUNTRY')}",
+        f"/ST={get_environment_value('X509_SUBJECT_STATE')}",
+        f"/L={get_environment_value('X509_SUBJECT_LOCATION')}",
         f"/O={organisation}",
         f"/CN={host}"
     ]
